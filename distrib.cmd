@@ -2,28 +2,38 @@ CLS
 echo on
 rem CHCP 1251
 
-SET /P LOGIN= < login
-SET /P PASSWORD= < password
+REM %cd% refers to the current working directory (variable)
+REM %~dp0 refers to the full path to the batch file's directory (static)
+REM %~dpnx0 refers to the full path to the batch directory and file name (static).
+REM ECHO %cd% - the current working directory (variable)
+REM ECHO %~dp0% - the full path to the batch file's directory (static)
+REM ECHO %~dpnx0% - the full path to the batch directory and file name (static)
 
-SET /P LOGINREP= < login
-SET /P PASSWORDREP= < passwordrep
+
+SET SETTINGSFILE=distrib.settings
+FOR /F "eol=# delims== tokens=1,2" %%i IN (%SETTINGSFILE%) DO (
+	REM В переменной i - ключ
+	REM В переменной j - значение
+	REM Мы транслируем это в переменные окружения
+	SET %%i=%%j
+)
 
 
 SET FILE4LOG= "scriptlog.log"
 
-REM -- Полное имя запускаемого файла предприятия
+REM -- enterptise executable filename full path
 REM SET ONECFILE="C:\Program Files (x86)\1cv82\common\1cestart.exe"
 SET ONECFILE="C:\Program Files (x86)\1cv82\8.2.19.130\bin\1cv8.exe"
 
-REM -- Параметры подключения к базе конфигурации
-SET BASE=/S"localhost\st13" /N"%LOGIN%" /P"%PASSWORD%"
+REM -- infobase connection parameters
+SET BASE=/S"localhost\st_devel" /N"%LOGIN%" /P"%PASSWORD%"
 
-REM -- Параметры подключения к репозиторию хранилища конфигурации
-SET REPOS=/ConfigurationRepositoryF"tcp://10.10.10.2\st_devel" /ConfigurationRepositoryN"%LOGINREP%" /ConfigurationRepositoryP"%PASSWORDREP%"
+REM -- repository connection parameters
+SET REPOS=/ConfigurationRepositoryF"tcp://127.0.0.1:1742\st_devel" /ConfigurationRepositoryN"%LOGINREP%" /ConfigurationRepositoryP"%PASSWORDREP%"
 
-SET FOLDER4BKUP=E:\Bases1c8\st_devel\
-SET FOLDER4DISTR=\\smartlab\ftp_va13ak\st\distribution\1.4.1.6\
-SET FOLDER4SETTINGS=C:\Documents and Settings\va13ak\Рабочий стол\st_distr\
+SET FOLDER4BKUP=E:\v13\st_devel\
+SET FOLDER4DISTR=D:\FTP\va13ak\st\distribution\1.4.1.6\
+SET FOLDER4SETTINGS=%~dp0%
 
 SET FILE4SETTINGS=%FOLDER4SETTINGS%protection-install.properties
 SET FILE4RESULT=%FOLDER4SETTINGS%protection-install.result
@@ -34,13 +44,13 @@ IF "%time:~0,1%" LSS "1" (
    SET FNAMEDT=%date:~6,4%%date:~3,2%%date:~0,2%-%time:~0,2%%time:~3,2%
 )
 
-REM -- Полное имя создаваемого файла бекапа конфигурации
+REM -- bkup configuration filename full path
 SET FNAMECONF="%FOLDER4BKUP%bkup_st_%FNAMEDT%.cf"
 
-REM -- Полное имя создаваемого файла бекапа конфигурации базы
+REM -- bkup infobase configuration filename full path
 SET FNAMEDBCONF="%FOLDER4BKUP%bkup_st_%FNAMEDT%_db.cf"
 
-REM -- Полное имя создаваемого файла поставки конфигурации
+REM -- congiguration delivery filename full path
 SET FNAMEDISTR="%FOLDER4DISTR%1Cv8.cf"
 
 SET USER=ww
@@ -54,26 +64,27 @@ echo %DATETIME% Понеслась.. >>%FILE4LOG%
 echo %FNAMECONF%
 
 
-REM -- Сохраняем текущую конфигурацию БД...
+REM -- backing up current infobase configuration...
 echo %DATETIME% Сохраняем текущую конфигурацию БД... >>%FILE4LOG%
 %ONECFILE% DESIGNER %BASE% /DumpDBCfg%FNAMEDBCONF% >>%FILE4LOG%
 
-REM -- Сохраняем текущую конфигурацию...
+REM -- backing up current configuration...
 echo %DATETIME% Сохраняем текущую конфигурацию... >>%FILE4LOG%
 %ONECFILE% DESIGNER %BASE% %REPOS% /DumpCfg%FNAMECONF% >>%FILE4LOG%
 
-REM -- Обновляем текущую конфигурацию из хранилища и обновляем конфигурацию БД...
+REM -- updating current configuration from repository and updating infobase configuration...
 echo %DATETIME% Обновляем текущую конфигурацию из хранилища и обновляем конфигурацию БД... >>%FILE4LOG%
 %ONECFILE% DESIGNER %BASE% %REPOS% /ConfigurationRepositoryUpdateCfg -revised -force /UpdateDBCfg >>%FILE4LOG%
 
-REM -- Создаем файл поставки...
+REM -- creating distribution file...
 echo %DATETIME% Создаем файл поставки... >>%FILE4LOG%
 %ONECFILE% DESIGNER %BASE% %REPOS% /CreateDistributionFiles -cffile%FNAMEDISTR% >>%FILE4LOG%
 
-REM -- Устанавливаем защиту...
-echo %DATETIME% Устанавливаем защиту... >>%FILE4LOG%
-%ONECFILE% ENTERPRISE /FD:\bases8\WiseAdvise /C"%FILE4SETTINGS%" /OUT"%FILE4RESULT%" >>%FILE4LOG%
 
-REM -- Копируем файл поставки...
+REM -- protecting distribution file...
+echo %DATETIME% Устанавливаем защиту... >>%FILE4LOG%
+%ONECFILE% ENTERPRISE /FE:\v13\WiseAdvise /C"%FILE4SETTINGS%" /OUT"%FILE4RESULT%" >>%FILE4LOG%
+
+REM -- copying distribution file...
 echo %DATETIME% Копируем файл поставки... >>%FILE4LOG%
-%ONECFILE% ENTERPRISE /FD:\bases8\WiseAdvise /C"%FILE4SETTINGS%;%FILE4RESULT%" >>%FILE4LOG%
+%ONECFILE% ENTERPRISE /FE:\v13\WiseAdvise /C"%FILE4SETTINGS%;%FILE4RESULT%" >>%FILE4LOG%

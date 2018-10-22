@@ -1,6 +1,11 @@
 scriptlog.log
 scriptlog.old.log
-login
-password
-passwordrep
 protection-install.properties
+protection-install.result
+distrib.settings*
+*.cf
+*.dt
+*.bkup
+*.result
+*.txt
+*.zip
