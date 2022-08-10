@@ -23,7 +23,7 @@ SET FILE4LOG= "scriptlog.log"
 
 REM -- enterptise executable filename full path
 REM SET ONECFILE="C:\Program Files (x86)\1cv82\common\1cestart.exe"
-SET ONECFILE="C:\Program Files (x86)\1cv82\8.2.19.130\bin\1cv8.exe"
+SET ONECFILE="C:\Program Files (x86)\1cv8\8.3.13.1644\bin\1cv8.exe"
 
 REM -- infobase connection parameters
 SET BASE=/S"localhost\st_devel" /N"%LOGIN%" /P"%PASSWORD%"
@@ -62,27 +62,6 @@ SET DATETIME=%DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2% %TIME:~0,2%:%TIME:~3,2%:%TIME:~
 echo -------------------------------------------------------------- >>%FILE4LOG%
 echo %DATETIME% Понеслась.. >>%FILE4LOG%
 echo %FNAMECONF%
-
-
-REM -- backing up current infobase configuration...
-echo %DATETIME% Сохраняем текущую конфигурацию БД... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% /DumpDBCfg%FNAMEDBCONF% >>%FILE4LOG%
-
-REM -- backing up current configuration...
-echo %DATETIME% Сохраняем текущую конфигурацию... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% %REPOS% /DumpCfg%FNAMECONF% >>%FILE4LOG%
-
-REM -- updating current configuration from repository and updating infobase configuration...
-echo %DATETIME% Обновляем текущую конфигурацию из хранилища и обновляем конфигурацию БД... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% %REPOS% /ConfigurationRepositoryUpdateCfg -revised -force /UpdateDBCfg >>%FILE4LOG%
-
-REM -- deleting old distribution file...
-echo %DATETIME% Удаляем старый файл поставки... >>%FILE4LOG%
-del /Q %FNAMEDISTR%
-
-REM -- creating distribution file...
-echo %DATETIME% Создаем файл поставки... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% %REPOS% /CreateDistributionFiles -cffile%FNAMEDISTR% >>%FILE4LOG%
 
 
 REM -- protecting distribution file...

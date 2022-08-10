@@ -20,16 +20,21 @@ FOR /F "eol=# delims== tokens=1,2" %%i IN (%SETTINGSFILE%) DO (
 
 
 SET FILE4LOG= "scriptlog.log"
+SET FILE4DSGLOG="tempdsg.log"
 
 REM -- enterptise executable filename full path
 REM SET ONECFILE="C:\Program Files (x86)\1cv82\common\1cestart.exe"
-SET ONECFILE="C:\Program Files (x86)\1cv82\8.2.19.130\bin\1cv8.exe"
+SET ONECFILEENC="C:\Program Files (x86)\1cv82\8.2.19.130\bin\1cv8.exe"
+SET ONECFILE="C:\Program Files (x86)\1cv8\8.3.10.2252\bin\1cv8.exe"
 
 REM -- infobase connection parameters
-SET BASE=/S"localhost\st_devel" /N"%LOGIN%" /P"%PASSWORD%"
+REM SET BASE=/S"localhost\st_devel" /N"%LOGIN%" /P"%PASSWORD%"
+SET BASE=/F"E:\v13\st4distr\base" /N"%LOGIN%" /P"%PASSWORD%"
 
 REM -- repository connection parameters
 SET REPOS=/ConfigurationRepositoryF"tcp://127.0.0.1:1742\st_devel" /ConfigurationRepositoryN"%LOGINREP%" /ConfigurationRepositoryP"%PASSWORDREP%"
+
+SET SRCFILE="E:\v13\st4distr\source\1Cv8.cf"
 
 SET FOLDER4BKUP=E:\v13\st_devel\
 SET FOLDER4DISTR=D:\FTP\va13ak\st\distribution\1.4.1.6\
@@ -64,17 +69,11 @@ echo %DATETIME% Понеслась.. >>%FILE4LOG%
 echo %FNAMECONF%
 
 
-REM -- backing up current infobase configuration...
-echo %DATETIME% Сохраняем текущую конфигурацию БД... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% /DumpDBCfg%FNAMEDBCONF% >>%FILE4LOG%
-
-REM -- backing up current configuration...
-echo %DATETIME% Сохраняем текущую конфигурацию... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% %REPOS% /DumpCfg%FNAMECONF% >>%FILE4LOG%
-
 REM -- updating current configuration from repository and updating infobase configuration...
-echo %DATETIME% Обновляем текущую конфигурацию из хранилища и обновляем конфигурацию БД... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% %REPOS% /ConfigurationRepositoryUpdateCfg -revised -force /UpdateDBCfg >>%FILE4LOG%
+echo %DATETIME% Обновляем текущую конфигурацию из файла и обновляем конфигурацию БД... >>%FILE4LOG%
+%ONECFILE% DESIGNER %BASE% /LoadCfg%SRCFILE% /UpdateDBCfg /DumpResult%FILE4DSGLOG% >>%FILE4LOG%
+type %FILE4DSGLOG% >>%FILE4LOG%
+echo %DATETIME% %ERRORLEVEL% >>%FILE4LOG%
 
 REM -- deleting old distribution file...
 echo %DATETIME% Удаляем старый файл поставки... >>%FILE4LOG%
@@ -82,13 +81,15 @@ del /Q %FNAMEDISTR%
 
 REM -- creating distribution file...
 echo %DATETIME% Создаем файл поставки... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% %REPOS% /CreateDistributionFiles -cffile%FNAMEDISTR% >>%FILE4LOG%
+%ONECFILE% DESIGNER %BASE% /CreateDistributionFiles -cffile%FNAMEDISTR% /DumpResult%FILE4DSGLOG% >>%FILE4LOG%
+type %FILE4DSGLOG% >>%FILE4LOG%
+echo %DATETIME% %ERRORLEVEL% >>%FILE4LOG%
 
 
 REM -- protecting distribution file...
 echo %DATETIME% Устанавливаем защиту... >>%FILE4LOG%
-%ONECFILE% ENTERPRISE /FE:\v13\WiseAdvise /C"%FILE4SETTINGS%" /OUT"%FILE4RESULT%" >>%FILE4LOG%
+%ONECFILEENC% ENTERPRISE /FE:\v13\WiseAdvise /C"%FILE4SETTINGS%" /OUT"%FILE4RESULT%" >>%FILE4LOG%
 
 REM -- copying distribution file...
 echo %DATETIME% Копируем файл поставки... >>%FILE4LOG%
-%ONECFILE% ENTERPRISE /FE:\v13\WiseAdvise /C"%FILE4SETTINGS%;%FILE4RESULT%" >>%FILE4LOG%
+%ONECFILEENC% ENTERPRISE /FE:\v13\WiseAdvise /C"%FILE4SETTINGS%;%FILE4RESULT%" >>%FILE4LOG%

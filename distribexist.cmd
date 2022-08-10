@@ -64,27 +64,6 @@ echo %DATETIME% Понеслась.. >>%FILE4LOG%
 echo %FNAMECONF%
 
 
-REM -- backing up current infobase configuration...
-echo %DATETIME% Сохраняем текущую конфигурацию БД... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% /DumpDBCfg%FNAMEDBCONF% >>%FILE4LOG%
-
-REM -- backing up current configuration...
-echo %DATETIME% Сохраняем текущую конфигурацию... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% %REPOS% /DumpCfg%FNAMECONF% >>%FILE4LOG%
-
-REM -- updating current configuration from repository and updating infobase configuration...
-echo %DATETIME% Обновляем текущую конфигурацию из хранилища и обновляем конфигурацию БД... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% %REPOS% /ConfigurationRepositoryUpdateCfg -revised -force /UpdateDBCfg >>%FILE4LOG%
-
-REM -- deleting old distribution file...
-echo %DATETIME% Удаляем старый файл поставки... >>%FILE4LOG%
-del /Q %FNAMEDISTR%
-
-REM -- creating distribution file...
-echo %DATETIME% Создаем файл поставки... >>%FILE4LOG%
-%ONECFILE% DESIGNER %BASE% %REPOS% /CreateDistributionFiles -cffile%FNAMEDISTR% >>%FILE4LOG%
-
-
 REM -- protecting distribution file...
 echo %DATETIME% Устанавливаем защиту... >>%FILE4LOG%
 %ONECFILE% ENTERPRISE /FE:\v13\WiseAdvise /C"%FILE4SETTINGS%" /OUT"%FILE4RESULT%" >>%FILE4LOG%
